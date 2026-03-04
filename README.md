@@ -102,6 +102,8 @@ Write 1 to 2 paragraphs here about what you learned:
 - about where bias or unfairness could show up in systems like this
 
 
+
+
 ---
 
 ## 7. `model_card_template.md`
@@ -139,6 +141,53 @@ Describe your scoring logic in plain language.
 - How does it turn those into a number
 
 Try to avoid code in this section, treat it like an explanation to a non programmer.
+
+I learned that most recommenders like spotify or netflix use a hybrid recommender systems. This means they collect data like plays skips and likes and generate candidate items. They rank the candidates and output recommendations. My recommendation system works similarily prioritizing genre, mood, and energy.
+
+In my system if the genre matches the users favorite genre its a +.35 and if it matches their favorite mood +.25 it then measures the closeness_score to get a energy match it then returns the overall score
+flowchart TD
+    A[Start] --> B[Load Songs Data]
+    B --> C[Create UserProfile]
+    C --> D[For each Song]
+
+    D --> E{Genre matches favorite_genre?}
+    E -- Yes --> E1[+0.35]
+    E -- No --> E2[+0.00]
+
+    E1 --> F{Mood matches favorite_mood?}
+    E2 --> F
+    F -- Yes --> F1[+0.25]
+    F -- No --> F2[+0.00]
+
+    F1 --> G[Compute energy_match = closeness_score(song.energy, target_energy)]
+    F2 --> G
+    G --> G1[+0.30 * energy_match]
+
+    G1 --> H[Set preferred_acoustic = 1.0 if likes_acoustic else 0.0]
+    H --> I[Compute acoustic_match = closeness_score(song.acousticness, preferred_acoustic)]
+    I --> I1[+0.10 * acoustic_match]
+
+    I1 --> J[Total score for song]
+    J --> K{More songs?}
+    K -- Yes --> D
+    K -- No --> L[Sort songs by score descending]
+    L --> M[Return top-k recommendations]
+
+    M --> N[Optional: explain_recommendation]
+    N --> O[Build reasons: genre/mood match + energy similarity + acoustic fit]
+    O --> P[End]
+
+    subgraph Closeness Score
+      CS1[feature_range = max_value - min_value]
+      CS2{feature_range <= 0?}
+      CS3[Return 0.0]
+      CS4[normalized_distance = |value - target| / feature_range]
+      CS5[Return max(0.0, 1.0 - normalized_distance)]
+
+      CS1 --> CS2
+      CS2 -- Yes --> CS3
+      CS2 -- No --> CS4 --> CS5
+    end
 
 ---
 
